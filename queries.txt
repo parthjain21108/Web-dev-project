@@ -1,0 +1,343 @@
+-- Create the student table
+CREATE TABLE student (
+    student_id INT PRIMARY KEY,
+    first_name VARCHAR(50),
+    last_name VARCHAR(50),
+    home_address_street VARCHAR(100),
+    home_address_city VARCHAR(50),
+    home_address_postcode VARCHAR(20),
+    nationality VARCHAR(50),
+    age INT,
+    email VARCHAR(100),
+    mobile_phone_number VARCHAR(15),
+    date_of_birth DATE,
+    gender CHAR(1),
+    study_level VARCHAR(20),
+    special_needs TEXT,
+    additional_comments TEXT,
+    status VARCHAR(10), -- placed/waiting
+    school VARCHAR(50)
+);
+
+-- Create the victoria_hall table with composite primary key
+CREATE TABLE victoria_hall (
+    hall_name VARCHAR(100),
+    place_number INT,
+    hall_address VARCHAR(100),
+    hall_phone_number VARCHAR(15),
+    hall_manager VARCHAR(100),
+    room_number INT,
+    monthly_rent_rate DECIMAL(10, 2),
+    student_id INT,
+    PRIMARY KEY (hall_name, place_number),
+    FOREIGN KEY (student_id) REFERENCES student(student_id)
+);
+
+-- Create the dormitory table with composite primary key
+CREATE TABLE dormitory (
+    dormitory_number INT,
+    dormitory_bed_number INT, -- 1, 2, 3
+    dormitory_address VARCHAR(100),
+    flat_number INT,
+    place_number INT,
+    monthly_rent_rate DECIMAL(10, 2),
+    student_id INT,
+    PRIMARY KEY (place_number, dormitory_bed_number),
+    FOREIGN KEY (student_id) REFERENCES student(student_id)
+);
+
+-- Create the payment table
+CREATE TABLE payment (
+    invoice_number INT PRIMARY KEY,
+    term VARCHAR(10), -- T1, T2, T3
+    due_payment DECIMAL(10, 2),
+    student_id INT,
+    place_number INT,
+    room_number INT,
+    address VARCHAR(100),
+    payment_date DATE,
+    payment_method VARCHAR(20), -- check, cash, Visa, etc.
+    first_reminder_date DATE,
+    second_reminder_date DATE,
+    FOREIGN KEY (student_id) REFERENCES student(student_id)
+);
+
+-- Create the inspection table
+CREATE TABLE inspection (
+    inspection_id INT PRIMARY KEY,
+    staff_name VARCHAR(100),
+    inspection_date DATE,
+    satisfactory_condition CHAR(1), -- Y/N
+    additional_comments TEXT,
+    dormitory_place_number INT,
+    dormitory_bed_number INT,
+    hall_name VARCHAR(100),
+    hall_place_number INT,
+    FOREIGN KEY (dormitory_place_number, dormitory_bed_number) REFERENCES dormitory(place_number, dormitory_bed_number),
+    FOREIGN KEY (hall_name, hall_place_number) REFERENCES victoria_hall(hall_name, place_number)
+);
+
+INSERT INTO student (student_id, first_name, last_name, home_address_street, home_address_city, home_address_postcode, nationality, age, email, mobile_phone_number, date_of_birth, gender, study_level, special_needs, additional_comments, status, school) 
+VALUES 
+(1, 'John', 'Doe', '123 Main St', 'Springfield', '12345', 'American', 20, 'john.doe@example.com', '123-456-7890', '2003-01-15', 'M', 'undergraduate', 'None', 'No comment', 'placed', 'SIT'),
+(2, 'Jane', 'Smith', '456 Elm St', 'Shelbyville', '67890', 'Canadian', 22, 'jane.smith@example.com', '098-765-4321', '2001-05-20', 'F', 'postgraduate', 'None', 'No comment', 'waiting', 'SIT'),
+(3, 'Alice', 'Johnson', '789 Oak St', 'Capitol City', '11223', 'British', 21, 'alice.johnson@example.com', '567-890-1234', '2002-09-10', 'F', 'undergraduate', 'None', 'No comment', 'placed', 'SIT');
+
+INSERT INTO victoria_hall (hall_name, place_number, hall_address, hall_phone_number, hall_manager, room_number, monthly_rent_rate, student_id) 
+VALUES 
+('Victoria Hall A', 101, '123 Hall St', '111-222-3333', 'Mr. Hall Manager', 1, 500.00, 1),
+('Victoria Hall B', 102, '456 Hall St', '222-333-4444', 'Ms. Hall Manager', 2, 550.00, 2),
+('Victoria Hall C', 103, '789 Hall St', '333-444-5555', 'Dr. Hall Manager', 3, 600.00, 3);
+
+INSERT INTO dormitory (dormitory_number, dormitory_bed_number, dormitory_address, flat_number, place_number, monthly_rent_rate, student_id) 
+VALUES 
+(1, 1, '123 Dorm St', 101, 201, 300.00, 1),
+(1, 2, '123 Dorm St', 101, 202, 300.00, 2),
+(2, 1, '456 Dorm St', 102, 203, 350.00, 3);
+
+INSERT INTO payment (invoice_number, term, due_payment, student_id, place_number, room_number, address, payment_date, payment_method, first_reminder_date, second_reminder_date) 
+VALUES 
+(1001, 'T1', 1500.00, 1, 101, 1, '123 Hall St', '2025-01-01', 'Visa', '2025-01-10', '2025-01-20'),
+(1002, 'T2', 1650.00, 2, 102, 2, '456 Hall St', '2025-01-02', 'Cash', '2025-01-11', '2025-01-21'),
+(1003, 'T3', 1800.00, 3, 103, 3, '789 Hall St', '2025-01-03', 'Check', '2025-01-12', '2025-01-22');
+
+INSERT INTO inspection (inspection_id, staff_name, inspection_date, satisfactory_condition, additional_comments, dormitory_place_number, dormitory_bed_number, hall_name, hall_place_number) 
+VALUES 
+(1, 'Inspector A', '2025-01-01', 'Y', 'Everything is fine', 201, 1, NULL, NULL);
+
+-- Inspection for a hall
+INSERT INTO inspection (inspection_id, staff_name, inspection_date, satisfactory_condition, additional_comments, dormitory_place_number, dormitory_bed_number, hall_name, hall_place_number) 
+VALUES 
+(2, 'Inspector B', '2025-01-02', 'N', 'Minor issues found', NULL, NULL, 'Victoria Hall A', 101);
+
+QUERIES -----
+
+
+Sure, here are the SQL queries to answer each of your questions based on the provided database schema:
+
+1. The manager’s name for each hall of residence.
+SQL
+SELECT hall_name, hall_manager 
+FROM victoria_hall 
+GROUP BY hall_name, hall_manager;
+2. Display the details of the total rent paid by a given student.
+SQL
+-- Replace '1' with the specific student_id you are interested in
+SELECT p.student_id, s.first_name, s.last_name, SUM(p.due_payment) AS total_rent_paid 
+FROM payment p
+JOIN student s ON p.student_id = s.student_id
+WHERE p.student_id = 1
+GROUP BY p.student_id, s.first_name, s.last_name;
+3. List students that have not paid their invoices by a given date.
+SQL
+-- Replace '2025-01-01' with the specific date you are interested in
+SELECT s.student_id, s.first_name, s.last_name, p.invoice_number, p.due_payment, p.first_reminder_date 
+FROM student s
+JOIN payment p ON s.student_id = p.student_id
+WHERE p.payment_date IS NULL AND p.first_reminder_date < '2025-01-01';
+4. Display the details of flat inspections where the property was found to be in an unsatisfactory condition.
+SQL
+SELECT * 
+FROM inspection 
+WHERE satisfactory_condition = 'N';
+5. List the names and matriculation numbers of students with their room number and place number in a particular hall of residence.
+SQL
+-- Replace 'Victoria Hall A' with the specific hall_name you are interested in
+SELECT s.first_name, s.last_name, s.student_id, v.room_number, v.place_number 
+FROM student s
+JOIN victoria_hall v ON s.student_id = v.student_id
+WHERE v.hall_name = 'Victoria Hall A';
+6. List the details of all students currently on the waiting list for accommodation, that is, not placed.
+SQL
+SELECT * 
+FROM student 
+WHERE status = 'waiting';
+7. Display the total number of students in each student category.
+SQL
+SELECT study_level, COUNT(*) AS total_students 
+FROM student 
+GROUP BY study_level;
+8. Display the minimum, maximum, and average monthly rent for rooms in halls of residence.
+SQL
+SELECT hall_name, 
+       MIN(monthly_rent_rate) AS min_rent, 
+       MAX(monthly_rent_rate) AS max_rent, 
+       AVG(monthly_rent_rate) AS avg_rent 
+FROM victoria_hall 
+GROUP BY hall_name;
+9. Display the total number of places in each hall of residence.
+SQL
+SELECT hall_name, COUNT(place_number) AS total_places 
+FROM victoria_hall 
+GROUP BY hall_name;
+These queries should provide the necessary information based on the requirements and the provided database schema.
+
+OTHER ALSO -
+
+Sure, here are 25 additional questions you can ask to retrieve data from the database:
+
+List all students along with their hall or dormitory details.
+
+SQL
+SELECT s.student_id, s.first_name, s.last_name, v.hall_name, v.room_number, v.place_number, d.dormitory_number, d.dormitory_bed_number, d.place_number
+FROM student s
+LEFT JOIN victoria_hall v ON s.student_id = v.student_id
+LEFT JOIN dormitory d ON s.student_id = d.student_id;
+Find the total number of students from each nationality.
+
+SQL
+SELECT nationality, COUNT(*) AS total_students 
+FROM student 
+GROUP BY nationality;
+Retrieve all payment records for a specific student by their ID.
+
+SQL
+-- Replace '1' with the specific student_id
+SELECT * 
+FROM payment 
+WHERE student_id = 1;
+List all students who have special needs.
+
+SQL
+SELECT * 
+FROM student 
+WHERE special_needs IS NOT NULL;
+Find the details of students who have made payments using Visa.
+
+SQL
+SELECT s.student_id, s.first_name, s.last_name, p.invoice_number, p.due_payment, p.payment_date 
+FROM student s
+JOIN payment p ON s.student_id = p.student_id
+WHERE p.payment_method = 'Visa';
+Display the total rent collected for each hall of residence.
+
+SQL
+SELECT v.hall_name, SUM(p.due_payment) AS total_rent_collected 
+FROM victoria_hall v
+JOIN payment p ON v.student_id = p.student_id AND v.place_number = p.place_number
+GROUP BY v.hall_name;
+List all dormitory beds that are currently vacant.
+
+SQL
+SELECT * 
+FROM dormitory 
+WHERE student_id IS NULL;
+Find the details of the most recent inspection for each hall.
+
+SQL
+SELECT hall_name, MAX(inspection_date) AS last_inspection_date 
+FROM inspection 
+WHERE hall_name IS NOT NULL 
+GROUP BY hall_name;
+Retrieve the names and IDs of students who have received reminders for overdue payments.
+
+SQL
+SELECT DISTINCT s.student_id, s.first_name, s.last_name 
+FROM student s
+JOIN payment p ON s.student_id = p.student_id
+WHERE p.first_reminder_date IS NOT NULL OR p.second_reminder_date IS NOT NULL;
+List all students who live in a specific city.
+
+SQL
+-- Replace 'Springfield' with the specific city
+SELECT * 
+FROM student 
+WHERE home_address_city = 'Springfield';
+Find the average age of students in each study level.
+
+SQL
+SELECT study_level, AVG(age) AS average_age 
+FROM student 
+GROUP BY study_level;
+Display the total number of rooms in each dormitory.
+
+SQL
+SELECT dormitory_number, COUNT(dormitory_bed_number) AS total_beds 
+FROM dormitory 
+GROUP BY dormitory_number;
+Retrieve the payment details for invoices paid in cash.
+
+SQL
+SELECT * 
+FROM payment 
+WHERE payment_method = 'Cash';
+List all students who have been placed in Victoria Hall A.
+
+SQL
+SELECT s.student_id, s.first_name, s.last_name 
+FROM student s
+JOIN victoria_hall v ON s.student_id = v.student_id
+WHERE v.hall_name = 'Victoria Hall A';
+Find the total number of inspections conducted by each staff member.
+
+SQL
+SELECT staff_name, COUNT(*) AS total_inspections 
+FROM inspection 
+GROUP BY staff_name;
+Display the due payments for each student along with their full name.
+
+SQL
+SELECT s.student_id, s.first_name, s.last_name, SUM(p.due_payment) AS total_due_payment 
+FROM student s
+JOIN payment p ON s.student_id = p.student_id
+GROUP BY s.student_id, s.first_name, s.last_name;
+List the details of all rooms with a monthly rent rate greater than $600.
+
+SQL
+SELECT * 
+FROM victoria_hall 
+WHERE monthly_rent_rate > 600;
+Retrieve the total number of students living in dormitories.
+
+SQL
+SELECT COUNT(DISTINCT student_id) AS total_students_in_dormitories 
+FROM dormitory 
+WHERE student_id IS NOT NULL;
+Find the details of all students who have paid their invoices on time.
+
+SQL
+SELECT s.student_id, s.first_name, s.last_name, p.invoice_number, p.payment_date 
+FROM student s
+JOIN payment p ON s.student_id = p.student_id
+WHERE p.payment_date IS NOT NULL AND p.payment_date <= p.first_reminder_date;
+List the inspection details for a specific dormitory.
+
+SQL
+-- Replace '1' with the specific dormitory_place_number
+SELECT * 
+FROM inspection 
+WHERE dormitory_place_number = 1;
+Display the total number of students in each gender category.
+
+SQL
+SELECT gender, COUNT(*) AS total_students 
+FROM student 
+GROUP BY gender;
+Find the details of all students who have not received any payment reminders.
+
+SQL
+SELECT s.student_id, s.first_name, s.last_name 
+FROM student s
+JOIN payment p ON s.student_id = p.student_id
+WHERE p.first_reminder_date IS NULL AND p.second_reminder_date IS NULL;
+Retrieve the names and IDs of students who have made payments in January 2025.
+
+SQL
+SELECT DISTINCT s.student_id, s.first_name, s.last_name 
+FROM student s
+JOIN payment p ON s.student_id = p.student_id
+WHERE p.payment_date BETWEEN '2025-01-01' AND '2025-01-31';
+List the details of all halls of residence along with the number of rooms and total rent collected.
+
+SQL
+SELECT v.hall_name, COUNT(v.room_number) AS total_rooms, SUM(p.due_payment) AS total_rent_collected 
+FROM victoria_hall v
+LEFT JOIN payment p ON v.student_id = p.student_id AND v.place_number = p.place_number
+GROUP BY v.hall_name;
+Find the details of all students who have paid their rent late.
+
+SQL
+SELECT s.student_id, s.first_name, s.last_name, p.invoice_number, p.due_payment, p.payment_date 
+FROM student s
+JOIN payment p ON s.student_id = p.student_id
+WHERE p.payment_date IS NOT NULL AND p.payment_date > p.first_reminder_date;
